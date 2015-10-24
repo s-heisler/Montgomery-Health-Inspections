@@ -5,11 +5,8 @@ require("data.table")
 ## Import shift function
 shift <- geneorama::shift
 
-##set working directory
-setwd('/Users/sofiaver/Dropbox (Personal)/Odd jobs/Health inspections')
-
 #load in the data
-foodInspect <- read.csv("Moco data/Food_Inspection.csv")
+foodInspect <- read.csv("Raw data/Food_Inspection.csv")
 
 ##fix variable names
 foodInspect<-setNames(foodInspect, gsub("\\.","_",colnames(foodInspect)))

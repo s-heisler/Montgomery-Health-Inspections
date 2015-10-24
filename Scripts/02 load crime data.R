@@ -1,7 +1,7 @@
 require("data.table")
 
 #load, in the data
-crime <- read.csv("Moco data/Moco crime data.csv")
+crime <- read.csv("Raw data/Moco crime data.csv")
 
 ##fix variable names
 crime<-setNames(crime, gsub("\\.","_",colnames(crime)))
