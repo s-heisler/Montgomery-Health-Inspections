@@ -8,14 +8,14 @@ crime<-setNames(crime, gsub("\\.","_",colnames(crime)))
 crime<-setNames(crime, gsub("___","_",colnames(crime)))
 
 #Adjust date formats
-crime$crime_date <- as.Date(crime$Start_Date_Time, "%m/%d/%Y %I:%M:%S %p")
-sum(is.na(crime$crime_date))
+crime$Date <- as.Date(crime$Start_Date_Time, "%m/%d/%Y %I:%M:%S %p")
+sum(is.na(crime$Date))
 
 #Convert into data.table
 crime <- data.table(crime)
 
 #Limit to relevant data range
-crime <- crime[crime_date >= as.IDate("2013-01-01")]
+crime <- crime[Date >= as.IDate("2013-01-01")]
 
 #Create flags for different crime types
 crime[ , crime_burglary_flag := ifelse(Class_Description %like% 'BURG ',1, 0)]
@@ -33,6 +33,6 @@ crime <- crime[!is.na(crime$Latitude)]
 
 #Save data
 write.table(crime, "Temp/Crime full processed data.csv", quote = FALSE, sep = "|", row.names = FALSE)
-crime_short <- crime[ , list(crime_date, crime_burglary_flag, crime_larceny_flag, crime_vandalism_flag, crime_drug_flag, Latitude, Longitude)]
+crime_short <- crime[ , list(Date, crime_burglary_flag, crime_larceny_flag, crime_vandalism_flag, crime_drug_flag, crime_any_flag, Latitude, Longitude)]
 
 saveRDS(crime_short, 'Data/Crime.Rds')

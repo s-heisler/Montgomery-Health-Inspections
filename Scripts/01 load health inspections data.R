@@ -26,6 +26,9 @@ foodInspect$Name <- gsub('-', ' ', foodInspect$Name)
 foodInspect$Name <- gsub('\'', '', foodInspect$Name)
 foodInspect$Name <- gsub('&', 'AND', foodInspect$Name)
 
+#Create a unique inspection id
+foodInspect$Inspection_ID <- id(foodInspect[c("Name", "Inspection_Date", "Inspection_Results")], drop = FALSE)
+
 #Create a unique restaurant id
 foodInspect$id <- id(foodInspect[c("Name", "addr")], drop = FALSE)
 
@@ -54,14 +57,17 @@ foodInspect[, last_insp := c(0, Inspection_Date[-.N]) ,by=id]
 foodInspect$days_since_insp = foodInspect$Inspection_Date-as.Date(foodInspect$last_insp, '1970-01-01')
 foodInspect$days_since_insp[foodInspect$last_insp==0] <- NA
 
-
 #Export table to csv for review
 write.table(foodInspect, "Temp/Food inspect full processed data.csv", quote = FALSE, sep = "|", row.names = FALSE)
 
 #Keep only the important variables
-foodInspectShort <- foodInspect[, list(id, Name, addr, City, Zip, Category, Type, stdLat, stdLon, Inspection_Date, fail_flag, past_fail, days_since_insp)]
+foodInspectShort <- foodInspect[, list(Inspection_ID, id, Name, addr, City, Zip, Category, Type, stdLat, stdLon, Inspection_Date, fail_flag, past_fail, days_since_insp)]
+
+#Standardize variable names
+setnames(foodInspectShort, "stdLat", "Latitude")
+setnames(foodInspectShort, "stdLon", "Longitude")
 
 #Save
-saveRDS(foodInspect , "Data/food_inspections.Rds")
+saveRDS(foodInspectShort , "Data/food_inspections.Rds")
 
 

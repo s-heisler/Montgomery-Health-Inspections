@@ -8,7 +8,7 @@ d311<-setNames(d311, gsub("\\.","_",colnames(d311)))
 d311<-setNames(d311, gsub("___","_",colnames(d311)))
 
 #Convert date
-d311$date <- as.Date(d311$Created, "%m/%d/%y")
+d311$Date <- as.Date(d311$Created, "%m/%d/%y")
 d311 <-data.table(d311)
 
 #Count and keep non-missing coordinates only
@@ -31,7 +31,7 @@ d311[ , d311_any_flag := ifelse(d311_noise_flag==1 | d311_dumping_flag==1 | d311
 write.table(crime, "Temp/311 full processed data.csv", quote = FALSE, sep = "|", row.names = FALSE)
 
 d311 <- d311[d311$d311_any_flag==1]
-d311_short <- d311[, list(date, Latitude, Longitude, d311_noise_flag, d311_dumping_flag, d311_water_flag, d311_pollution_flag, d311_any_flag)]
+d311_short <- d311[, list(Date, Latitude, Longitude, d311_noise_flag, d311_dumping_flag, d311_water_flag, d311_pollution_flag, d311_any_flag)]
 
 #Write data out
 saveRDS(d311_short, "Data/d311.Rds")
