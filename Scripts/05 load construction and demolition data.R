@@ -1,5 +1,9 @@
+setwd('/Users/sofiaver/Dropbox (Personal)/Odd jobs/Health inspections')
+
 require("geneorama")
 geneorama::detach_nonstandard_packages()
+require("geneorama")
+geneorama::sourceDir("Scripts/functions/")
 require("data.table")
 require("plyr")
 
@@ -37,16 +41,44 @@ permits[, Longitude:=substring(Longitude, 0, nchar(Longitude)-1)]
 permits$Latitude <- as.numeric(permits$Latitude)
 permits$Longitude <- as.numeric(permits$Longitude)
 
-# #Write out all missing coordinate addresses
-# select <- permits[is.na(permits$Latitude)]
-# select <- select[, list(Location)]
-# setkey(select, Location)
-# select <- unique(select)
-# write.table(select, "Temp/Construction addresses missing coords.csv", quote = TRUE, sep = "|", row.names = FALSE)
+#Clean up the address field
+drop_ns <- function (x) gsub("\n", " ", x)
+permits$Location <- drop_ns(permits$Location)
 
-#PLACEHOLDER: Probably figure out how to fill in coordinates here
+####Geocode the missing addresses ####
+#Count missing geocodes
+print(cat('Fraction of rows missing coords:', sum(is.na(permits$Latitude))/nrow(permits)))
 
-#Drop missing coordinates
+#Read in and merge stuff that's been geocoded already
+fillin_coords<- readRDS("Data/Extra geocodes.RDS")
+for(id in 1:nrow(geocoded)){
+  permits$Latitude[permits$Location %in% fillin_coords$address_original[id]] <- fillin_coords$Latitude[id]
+  permits$Longitude[permits$Location %in% fillin_coords$address_original[id]] <- fillin_coords$Longitude[id]
+}
+
+#Create list of unique addresses still missing coords
+setkey(permits, Location)
+select <- permits[is.na(permits$Latitude)][, list(Location)]
+select <- unique(select)
+
+#Geocode missing addresses
+geocoded <- get_geocodes(input_table=select[
+											i=TRUE,
+											j=list(address_field=Location)],
+                    tempfilename="Temp/_geocodes_construction.RDS")
+
+#add the missing coordinates back into the raw data
+for(id in 1:nrow(geocoded)){
+  permits$Latitude[permits$Location %in% geocoded$address_original[id]] <- geocoded$lat[id]
+  permits$Longitude[permits$Location %in% geocoded$address_original[id]] <- geocoded$lon[id]
+}
+
+#Re-save the full geocode compilation
+fillin_coords_combined <- rbind.fill(fillin_coords, geocoded)
+saveRDS(fillin_coords_combined, "Data/Extra geocodes.RDS")
+
+
+#Drop still missing coordinates
 print(cat('Fraction of rows missing coords:', sum(is.na(permits$Latitude))/NROW(permits)))
 permits <- permits[!is.na(permits$Latitude)]
 

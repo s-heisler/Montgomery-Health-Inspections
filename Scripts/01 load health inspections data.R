@@ -40,6 +40,50 @@ foodInspect$Longitude[is.na(foodInspect$Longitude)] <- 0
 coords_agg <- foodInspect[,list(stdLat=max(Latitude), stdLon=min(Longitude)),by=id]
 foodInspect <- join(foodInspect, coords_agg, by='id')
 
+################################
+#Geocode missing coords
+#Replace zeroes back with NAs
+foodInspect$stdLat[foodInspect$stdLat==0] <- NA
+foodInspect$stdLon[foodInspect$stdLon==0] <- NA
+
+#Count missing geocodes
+print(cat('Fraction of rows missing coords:', sum(is.na(foodInspect$stdLat))/nrow(foodInspect)))
+
+#Read in and merge stuff that's been geocoded already
+fillin_coords<- readRDS("Data/Extra geocodes.RDS")
+for(id in 1:nrow(geocoded)){
+  foodInspect$stdLat[foodInspect$adds %in% fillin_coords$address_original[id]] <- fillin_coords$Latitude[id]
+  foodInspect$stdLon[foodInspect$addr %in% fillin_coords$address_original[id]] <- fillin_coords$Longitude[id]
+}
+
+
+#Create list of unique addresses still missing coords
+foodInspect$fulladdr <- paste(foodInspect$addr, foodInspect$city, "MD", foodInspect$Zip)
+select <- foodInspect[is.na(foodInspect$stdLat)][, list(fulladdr)]
+setkey(select, fulladdr)
+select <- unique(select)
+
+#Geocode missing addresses
+geocoded <- get_geocodes(input_table=select[
+											i=TRUE,
+											j=list(address_field=fulladdr)],
+                    tempfilename="Temp/_geocodes_foodid.RDS")
+
+#add the missing coordinates back into the raw data
+for(id in 1:nrow(geocoded)){
+  foodInspect$stdLat[foodInspect$fulladdr %in% geocoded$address_original[id]] <- geocoded$lat[id]
+  foodInspect$stdLon[foodInspect$fulladdr %in% geocoded$address_original[id]] <- geocoded$lon[id]
+}
+
+#Count missing geocodes again
+print(cat('Fraction of rows missing coords:', sum(is.na(foodInspect$stdLat))/nrow(foodInspect)))
+
+#Re-save the full geocode compilation
+fillin_coords_combined <- rbind.fill(fillin_coords, geocoded)
+saveRDS(fillin_coords_combined, "Data/Extra geocodes.RDS")
+
+##################################
+
 #Drop rows with missing coordinates
 foodInspect <- foodInspect[foodInspect$stdLat!=0]
 
