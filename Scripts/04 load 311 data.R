@@ -5,14 +5,16 @@ require("plyr")
 
 
 #Read in data
-pollution <- read.csv("Raw data/DEP Environmental Code SRs from 2013 Onward1.csv")
-mice <- read.csv("Raw data/DHCA Rodents Bedbugs Mice SRs from 2013 Onward2.csv")
-trash <- read.csv("Raw data/DHCA Trash Complaint SRs from 2013 Onward3.csv")
+pollution <- read.csv("Raw data/311 data/DEP Environmental Code SRs from 2013 Onward1.csv")
+mice <- read.csv("Raw data/311 data/DHCA Rodents Bedbugs Mice SRs from 2013 Onward2.csv")
+mice2 <- read.csv("Raw data/311 data/Rodent Complaints.csv")
+trash <- read.csv("Raw data/311 data/DHCA Trash Complaint SRs from 2013 Onward3.csv")
 
 mice$Sub.Area <- "Mice"
+mice2$Sub.Area <- "Mice"
 trash$Sub.Area <- "Trash"
 
-d311 <- rbind.fill(pollution, mice, trash)
+d311 <- rbind.fill(pollution, mice, mice2, trash)
 
 d311<-setNames(d311, gsub("\\.","_",colnames(d311)))
 d311<-setNames(d311, gsub("___","_",colnames(d311)))

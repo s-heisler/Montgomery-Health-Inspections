@@ -3,7 +3,7 @@ geneorama::detach_nonstandard_packages()
 require("data.table")
 
 #Read in data
-license <- read.csv("Raw Data/Licensee_Information_Open_Data_PROD_10072015.csv")
+license <- read.csv("Raw Data/Liquor licenses/Licensee_Information_Open_Data_PROD_10072015.csv")
 
 #Pull in food inspections data
 foodInspect <- readRDS("Data/food_inspections.Rds")
@@ -82,7 +82,7 @@ for (name in names(trans)) {
 
 merged <- merge(foodId, license, by=c("addr", "Zip"), all.y=TRUE)
 
-
+write.table(foodId, "Temp/inspection ids.csv", quote = TRUE, sep = "|", row.names = FALSE)
 write.table(merged, "Temp/matched licenses.csv", quote = TRUE, sep = "|", row.names = FALSE)
 
 print("Done!")

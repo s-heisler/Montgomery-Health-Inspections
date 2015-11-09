@@ -12,7 +12,8 @@ calculate_heat_values <- function(inspections,
                                   observed_values,
                                   window = 90,
                                   page_limit = 500,
-                                  verbose = TRUE){
+                                  verbose = TRUE,
+                                  offset = 0){
     require(data.table)
     
     obs_cols <- c("Date", "Latitude", "Longitude")
@@ -45,14 +46,13 @@ calculate_heat_values <- function(inspections,
           if(verbose){
               print(paste(sys.call()[2], "out of", length(II)))
           }
-          print(ii)
           zz <- foverlaps(    
               x = inspections[i = ii, 
                               j = list(Inspection_ID, 
                                        Latitude, 
                                        Longitude), 
-                              keyby = list(start = Inspection_Date - window, 
-                                           end = Inspection_Date)],
+                              keyby = list(start = Inspection_Date - window - offset, 
+                                           end = Inspection_Date - offset)],
               y = observed_values[i = TRUE, 
                                   j = list(Latitude, Longitude),
                                   keyby = list(start = Date,  end = Date)],

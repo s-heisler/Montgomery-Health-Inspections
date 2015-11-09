@@ -6,7 +6,7 @@ require("data.table")
 shift <- geneorama::shift
 
 #load in the data
-foodInspect <- read.csv("Raw data/Food_Inspection.csv")
+foodInspect <- read.csv("Raw data/Food inspections/Food_Inspection.csv")
 
 ##fix variable names
 foodInspect<-setNames(foodInspect, gsub("\\.","_",colnames(foodInspect)))
@@ -26,11 +26,16 @@ foodInspect$Name <- gsub('-', ' ', foodInspect$Name)
 foodInspect$Name <- gsub('\'', '', foodInspect$Name)
 foodInspect$Name <- gsub('&', 'AND', foodInspect$Name)
 
-#Create a unique inspection id
-foodInspect$Inspection_ID <- id(foodInspect[c("Name", "Inspection_Date", "Inspection_Results")], drop = FALSE)
-
 #Create a unique restaurant id
 foodInspect$id <- id(foodInspect[c("Name", "addr")], drop = FALSE)
+
+#Create a unique inspection id
+foodInspect$Inspection_ID <- id(foodInspect[c("id", "Inspection_Date", "Inspection_Results")], drop = FALSE)
+
+#Drop duplicate inspection records
+foodInspect <- data.table(foodInspect)
+setkey(foodInspect, Inspection_ID)
+foodInspect <- unique(foodInspect)
 
 #Fill in and standardize missing coordinates when available
 foodInspect <- data.table(foodInspect)
@@ -96,16 +101,54 @@ foodInspect <- foodInspect[order(id, Inspection_Date)]
 #Calculate failure on previous inspection
 foodInspect[ , past_fail := shift(fail_flag, -1, 0), by = id]
 
-#Calculate time since last inspection
-foodInspect[, last_insp := c(0, Inspection_Date[-.N]) ,by=id]
-foodInspect$days_since_insp = foodInspect$Inspection_Date-as.Date(foodInspect$last_insp, '1970-01-01')
-foodInspect$days_since_insp[foodInspect$last_insp==0] <- NA
+
+## Calcualte time since last inspection.
+## If the time is NA, this means it's the first inspection; add an inicator 
+## variable to indicate that it's the first inspection.
+foodInspect[i = TRUE , 
+          j = timeSinceLast := as.numeric(
+              Inspection_Date - shift(Inspection_Date, -1, NA)), 
+          by = id]
+foodInspect[ , firstRecord := 0]
+foodInspect[is.na(timeSinceLast), firstRecord := 1]
+foodInspect[is.na(timeSinceLast), timeSinceLast := 730]
+foodInspect[ , timeSinceLast := pmin(timeSinceLast, 730)]
+
+
+#Create dummy vars for biggest categories
+foodInspect[ , category_restaurant := ifelse(Category=="Restaurant",1, 0)]
+foodInspect[ , category_school := ifelse(Category %like% "School",1, 0)]
+foodInspect[ , category_market := ifelse(Category %like% "Market",1, 0)]
+foodInspect[ , category_takeout := ifelse(Category =="Carry Out",1, 0)]
+
+#Create dummy vars for month - not very elegant, but effective
+foodInspect[ , Jan := ifelse(format(Inspection_Date, "%m") == "01", 1, 0)]
+foodInspect[ , Feb := ifelse(format(Inspection_Date, "%m") == "02", 1, 0)]
+foodInspect[ , Mar := ifelse(format(Inspection_Date, "%m") == "03", 1, 0)]
+foodInspect[ , Apr := ifelse(format(Inspection_Date, "%m") == "04", 1, 0)]
+foodInspect[ , May := ifelse(format(Inspection_Date, "%m") == "05", 1, 0)]
+foodInspect[ , Jun := ifelse(format(Inspection_Date, "%m") == "06", 1, 0)]
+foodInspect[ , Jul := ifelse(format(Inspection_Date, "%m") == "07", 1, 0)]
+foodInspect[ , Aug := ifelse(format(Inspection_Date, "%m") == "08", 1, 0)]
+foodInspect[ , Sep := ifelse(format(Inspection_Date, "%m") == "09", 1, 0)]
+foodInspect[ , Oct := ifelse(format(Inspection_Date, "%m") == "10", 1, 0)]
+foodInspect[ , Nov := ifelse(format(Inspection_Date, "%m") == "11", 1, 0)]
+
+#Create dummy vars for the biggest towns
+foodInspect[ , CitySilverSpring := ifelse(City == "SILVER SPRING", 1, 0)]
+foodInspect[ , CityRockville := ifelse(City == "ROCKVILLE", 1, 0)]
+foodInspect[ , CityGaithesburg := ifelse(City == "GAITHESBURG", 1, 0)]
+foodInspect[ , CityBethesda := ifelse(City == "BETHESDA", 1, 0)]
+foodInspect[ , CityGermantown := ifelse(City == "GERMANTOWN", 1, 0)]
+foodInspect[ , CityOlney := ifelse(City == "OLNEY", 1, 0)]
+foodInspect[ , CityWheaton := ifelse(City == "WHEATON", 1, 0)]
+
 
 #Export table to csv for review
 write.table(foodInspect, "Temp/Food inspect full processed data.csv", quote = FALSE, sep = "|", row.names = FALSE)
 
 #Keep only the important variables
-foodInspectShort <- foodInspect[, list(Inspection_ID, id, Name, addr, City, Zip, Category, Type, stdLat, stdLon, Inspection_Date, fail_flag, past_fail, days_since_insp)]
+foodInspectShort <- foodInspect[, list(Inspection_ID, id, Name, addr, City, Zip, Category, Type, stdLat, stdLon, Inspection_Date, fail_flag, past_fail, timeSinceLast, category_restaurant, category_takeout, category_market, category_school, firstRecord, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, CitySilverSpring, CityRockville, CityGaithesburg, CityBethesda, CityGermantown, CityOlney, CityWheaton)]
 
 #Standardize variable names
 setnames(foodInspectShort, "stdLat", "Latitude")

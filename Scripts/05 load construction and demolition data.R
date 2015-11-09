@@ -1,5 +1,3 @@
-setwd('/Users/sofiaver/Dropbox (Personal)/Odd jobs/Health inspections')
-
 require("geneorama")
 geneorama::detach_nonstandard_packages()
 require("geneorama")
@@ -8,9 +6,9 @@ require("data.table")
 require("plyr")
 
 #Read in data
-combuild <- read.csv("Raw data/Commercial building permits.csv")
-resbuild <- read.csv("Raw data/Residential building permits.csv")
-demol <- read.csv("Raw data/Demolition Permits.csv")
+combuild <- read.csv("Raw data/Demolition and construction/Commercial building permits.csv")
+resbuild <- read.csv("Raw data/Demolition and construction/Residential building permits.csv")
+demol <- read.csv("Raw data/Demolition and construction/Demolition Permits.csv")
 
 #Clean up datasets
 combuild <- subset(combuild, Work.Type=="CONSTRUCT" | Work.Type=="BUILD FOUNDATION")
@@ -76,7 +74,6 @@ for(id in 1:nrow(geocoded)){
 #Re-save the full geocode compilation
 fillin_coords_combined <- rbind.fill(fillin_coords, geocoded)
 saveRDS(fillin_coords_combined, "Data/Extra geocodes.RDS")
-
 
 #Drop still missing coordinates
 print(cat('Fraction of rows missing coords:', sum(is.na(permits$Latitude))/NROW(permits)))
