@@ -23,21 +23,11 @@ d311<-setNames(d311, gsub("___","_",colnames(d311)))
 d311$Date <- as.Date(d311$Created, "%m/%d/%y")
 d311 <-data.table(d311)
 
-
-#Fix missing sub-areas
-d311[(SolutionName %like% 'Burning') & is.null(Sub_Area), Sub_Area := 'Air -']
-d311[(SolutionName %like% 'Air') & is.null(Sub_Area), Sub_Area := 'Air -']
-d311[(SolutionName %like% 'Smoke') & is.null(Sub_Area), Sub_Area := 'Air -']
-d311[(SolutionName %like% 'Noise') & is.null(Sub_Area), Sub_Area := 'Noise']
-d311[(SolutionName %like% 'Dumping') & is.null(Sub_Area), Sub_Area := 'Illegal Dumping']
-
-
 #Rename coordinate columns
 setnames(d311,"GIS_LAT","Latitude")
 setnames(d311,"GIS_LONG","Longitude")
 
 print(cat('Fraction of rows missing coords:', sum(is.na(d311$Latitude))/nrow(d311)))
-
 
 #Standardize coords that got lost in un-merging cells
 #Create list of unique addresses not missing coords

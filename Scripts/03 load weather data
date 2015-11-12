@@ -3,7 +3,7 @@ geneorama::detach_nonstandard_packages()
 require("data.table")
 
 #Read in data
-weather <- read.table("Raw data/Weather/Weather Gaithesburg.txt", header=TRUE, sep="\t")
+weather <- read.table("Raw data/Weather/Weather Gaithesburg thru Nov-10.txt", header=TRUE, sep="\t")
 
 
 #Convert data types
@@ -15,7 +15,7 @@ weather$date <- as.Date(weather$valid, "%Y-%m-%d %H:%M")
 weather <- data.table(weather)
 
 #Aggregate by day
-weather_daily <- weather[,list(temp=mean(na.omit(temp)), humid=mean(na.omit(humidity)), precip=sum(na.omit(precip))),by=date]
+weather_daily <- weather[,list(temp=max(na.omit(temp)), humid=mean(na.omit(humidity)), precip=sum(na.omit(precip))),by=date]
 
 #Impute missings
 require("zoo")
@@ -32,7 +32,7 @@ weather_daily$precip <- as.numeric(as.character(weather_daily$precip))
 weather_daily$date <- as.Date(weather_daily$date)
 
 #Calculate running 3-day aggregations
-weather_daily[, temp3day_avg:=shift(rollapply(temp, 3, mean, na.rm=TRUE), -3)]
+weather_daily[, temp3day_avg:=shift(rollapply(temp, 3, max, na.rm=TRUE), -3)]
 weather_daily[, humid3day_avg:=shift(rollapply(humid, 3, mean, na.rm=TRUE), -3)]
 weather_daily[, precip3day_sum:=shift(rollapply(precip, 3, sum, na.rm=TRUE), -3)]
 

@@ -1,15 +1,12 @@
 geneorama::loadinstall_libraries("data.table")
 require("plyr")
 require("data.table")
-require("RSocrata")
-geneorama::sourceDir("Scripts/functions/")
-
 
 ## Import shift function
 shift <- geneorama::shift
 
 #load in the data
-foodInspect <- read.socrata("https://data.montgomerycountymd.gov/Health-and-Human-Services/Food-Inspection/5pue-gfbe")
+foodInspect <- read.csv("Raw data/Food inspections/Food_Inspection.csv")
 
 ##fix variable names
 foodInspect<-setNames(foodInspect, gsub("\\.","_",colnames(foodInspect)))
@@ -30,7 +27,7 @@ foodInspect$Name <- gsub('\'', '', foodInspect$Name)
 foodInspect$Name <- gsub('&', 'AND', foodInspect$Name)
 
 #Create a unique restaurant id
-setnames(foodInspect, "Establishment_ID", "id")
+foodInspect$id <- id(foodInspect[c("Name", "addr")], drop = FALSE)
 
 #Create a unique inspection id
 foodInspect$Inspection_ID <- id(foodInspect[c("id", "Inspection_Date", "Inspection_Results")], drop = FALSE)
@@ -51,7 +48,7 @@ foodInspect <- join(foodInspect, coords_agg, by='id')
 ################################
 #Geocode missing coords
 #Replace zeroes back with NAs
-foodInspect$stdLat[(foodInspect$stdLat<=30) | (foodInspect$stdLat>=40)] <- NA
+foodInspect$stdLat[foodInspect$stdLat==0] <- NA
 foodInspect$stdLon[foodInspect$stdLon==0] <- NA
 
 #Count missing geocodes
@@ -59,9 +56,9 @@ print(cat('Fraction of rows missing coords:', sum(is.na(foodInspect$stdLat))/nro
 
 #Read in and merge stuff that's been geocoded already
 fillin_coords<- readRDS("Data/Extra geocodes.RDS")
-for(id in 1:nrow(foodInspect)){
-  foodInspect$stdLat[foodInspect$adds %in% fillin_coords$address_original[id]] <- fillin_coords$lat[id]
-  foodInspect$stdLon[foodInspect$addr %in% fillin_coords$address_original[id]] <- fillin_coords$lon[id]
+for(id in 1:nrow(geocoded)){
+  foodInspect$stdLat[foodInspect$adds %in% fillin_coords$address_original[id]] <- fillin_coords$Latitude[id]
+  foodInspect$stdLon[foodInspect$addr %in% fillin_coords$address_original[id]] <- fillin_coords$Longitude[id]
 }
 
 

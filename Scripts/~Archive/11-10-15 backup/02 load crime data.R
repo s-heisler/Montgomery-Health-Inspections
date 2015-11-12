@@ -1,8 +1,7 @@
 require("data.table")
-require("RSocrata")
 
 #load, in the data
-crime <- read.socrata("https://data.montgomerycountymd.gov/Public-Safety/Crime/icn6-v9z3")
+crime <- read.csv("Raw data/Crime/Moco crime data.csv")
 
 ##fix variable names
 crime<-setNames(crime, gsub("\\.","_",colnames(crime)))

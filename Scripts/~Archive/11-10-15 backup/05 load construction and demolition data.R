@@ -4,12 +4,11 @@ require("geneorama")
 geneorama::sourceDir("Scripts/functions/")
 require("data.table")
 require("plyr")
-geneorama::loadinstall_libraries(c("RSocrata"))
 
 #Read in data
-combuild <- read.socrata("https://data.montgomerycountymd.gov/Licenses-Permits/Commercial-Permits/i26v-w6bd")
-resbuild <- read.socrata("https://data.montgomerycountymd.gov/Licenses-Permits/Residential-Permit/m88u-pqki")
-demol <- read.socrata("https://data.montgomerycountymd.gov/Licenses-Permits/Demolition-Permits/b6ht-fw3x")
+combuild <- read.csv("Raw data/Demolition and construction/Commercial building permits.csv")
+resbuild <- read.csv("Raw data/Demolition and construction/Residential building permits.csv")
+demol <- read.csv("Raw data/Demolition and construction/Demolition Permits.csv")
 
 #Clean up datasets
 combuild <- subset(combuild, Work.Type=="CONSTRUCT" | Work.Type=="BUILD FOUNDATION")
@@ -31,7 +30,7 @@ permits$permit_final_date <- as.Date(permits$Final_Date, "%m/%d/%Y")
 permits <- data.table(permits)
 
 #Trim down dates
-permits <- permits[permit_issue_date >= as.IDate("2013-06-01")]
+permits <- permits[permit_issue_date >= as.IDate("2013-01-01")]
 
 #Extract latitude and longitude
 permits[, c("Loc1", "Loc2"):=tstrsplit(Location, "(", fixed=TRUE)]

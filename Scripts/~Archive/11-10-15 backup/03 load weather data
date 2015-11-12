@@ -3,7 +3,7 @@ geneorama::detach_nonstandard_packages()
 require("data.table")
 
 #Read in data
-weather <- read.table("Raw data/Weather/Weather Gaithesburg thru Nov-10.txt", header=TRUE, sep="\t")
+weather <- read.table("Raw data/Weather/Weather Gaithesburg.txt", header=TRUE, sep="\t")
 
 
 #Convert data types
@@ -15,17 +15,14 @@ weather$date <- as.Date(weather$valid, "%Y-%m-%d %H:%M")
 weather <- data.table(weather)
 
 #Aggregate by day
-weather_daily <- weather[,list(temp=max(na.omit(temp)), humid=mean(na.omit(humidity)), precip=sum(na.omit(precip))),by=date]
-
-#Get rid of the infinite values
-weather_daily$temp[!is.finite(weather_daily$temp)] <- NA
+weather_daily <- weather[,list(temp=mean(na.omit(temp)), humid=mean(na.omit(humidity)), precip=sum(na.omit(precip))),by=date]
 
 #Impute missings
 require("zoo")
 weather_daily <- zoo(weather_daily)
-weather_daily$temp <- na.approx(weather_daily$temp)
-weather_daily$humid <- na.approx(weather_daily$humid)
-weather_daily$precip <- na.approx(weather_daily$precip)
+weather_daily$temp <- na.spline(weather_daily$temp)
+weather_daily$humid <- na.spline(weather_daily$humid)
+weather_daily$precip <- na.spline(weather_daily$precip)
 
 #Fix data types again because i don't have time to figure out how to get around it
 weather_daily <- data.table(weather_daily)

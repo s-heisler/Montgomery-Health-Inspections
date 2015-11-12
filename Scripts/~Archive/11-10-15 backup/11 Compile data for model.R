@@ -4,7 +4,7 @@ require("geneorama")
 require("data.table")
 
 ## Load custom functions
-geneorama::sourceDir("Scripts/functions/")
+geneorama::sourceDir("CODE/functions/")
 
 
 ################
